@@ -57,19 +57,6 @@ This implementation supports:
 
 ---
 
-# Architecture Diagram
-
-*(Insert architecture diagram here)*
-
-High-level:
-
-```
-Salesforce → Named Credential → API Gateway → Lambda → Presigned URL
-Browser (LWC) → PUT → S3 bucket
-```
-
----
-
 # Repo Structure
 
 ```
