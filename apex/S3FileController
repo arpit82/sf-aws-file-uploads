@@ -1,0 +1,34 @@
+public with sharing class S3FileController {
+    public class PresignDto {
+        @AuraEnabled public String presignedUrl;
+        @AuraEnabled public String method;
+        @AuraEnabled public Integer expiresIn;
+        @AuraEnabled public String s3ObjectKey;
+        @AuraEnabled public String bucket;
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static PresignDto getPresignedUrl(String bucket, String key, String contentType, Integer expiresIn) {
+        try {
+            S3PresignService.PresignResult svc = S3PresignService.getPresignedUrl(bucket, key, contentType, expiresIn);
+            PresignDto dto = new PresignDto();
+            dto.presignedUrl = svc.presignedUrl;
+            dto.method = svc.method == null ? 'PUT' : svc.method;
+            dto.expiresIn = svc.expiresIn == null ? (expiresIn == null ? 600 : expiresIn) : svc.expiresIn;
+            dto.s3ObjectKey = svc.s3ObjectKey == null ? key : svc.s3ObjectKey;
+            dto.bucket = svc.bucket == null ? bucket : svc.bucket;
+            return dto;
+        } catch (Exception ex) {
+            throw new AuraHandledException('Presign error: ' + ex.getMessage());
+        }
+    }
+
+    @AuraEnabled
+    public static Id saveFileMetadata(Id recordId, String fileName, String s3Key, String s3Url) {
+        try {
+            return S3Uploader.saveFileMetadata(recordId, fileName, s3Key, s3Url);
+        } catch (Exception ex) {
+            throw new AuraHandledException('Save metadata error: ' + ex.getMessage());
+        }
+    }
+}
