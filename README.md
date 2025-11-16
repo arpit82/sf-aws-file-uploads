@@ -324,6 +324,6 @@ Use least privilege IAM
 
 Avoid wildcard * in CORS
 
-Keep presigned URL expiry low (5–10 min)
+Low presign expiry (5–10 minutes)
 
 Consider SSE-S3 or SSE-KMS encryption
