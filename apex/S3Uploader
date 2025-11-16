@@ -1,0 +1,27 @@
+public with sharing class S3Uploader {
+    @AuraEnabled
+    public static Id saveFileMetadata(Id recordId, String fileName, String s3Key, String s3Url) {
+        try {
+            // Check for custom object S3_File__c existence
+            Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
+            if (gd.containsKey('S3_File__c')) {
+                S3_File__c rec = new S3_File__c();
+                rec.Name = fileName;
+                if (recordId != null) {
+                    try { rec.put('Parent_Record__c', recordId); } catch (Exception ex) {}
+                }
+                try { rec.put('S3_Key__c', s3Key); } catch (Exception ex) {}
+                try { rec.put('S3_Url__c', s3Url); } catch (Exception ex) {}
+                insert rec;
+                return rec.Id;
+            } else {
+                // No S3_File__c - return null (you can implement alternate storage)
+                System.debug('S3_File__c not found. Create and retry or update S3Uploader implementation.');
+                return null;
+            }
+            
+        } catch (Exception e) {
+            throw new AuraHandledException('saveFileMetadata failed: ' + e.getMessage());
+        }
+    }
+}
