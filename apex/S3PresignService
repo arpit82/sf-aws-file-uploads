@@ -1,0 +1,82 @@
+public with sharing class S3PresignService {
+    public class PresignResult {
+        @AuraEnabled public String presignedUrl;
+        @AuraEnabled public String method;
+        @AuraEnabled public Integer expiresIn;
+        @AuraEnabled public String s3ObjectKey;
+        @AuraEnabled public String bucket;
+    }
+
+    // Named Credential endpoint - change to your Named Credential name/stage
+    private static final String ENDPOINT = 'callout:Presign_API_NC/generate-presigned';
+
+    @AuraEnabled(cacheable=false)
+    public static PresignResult getPresignedUrl(String bucket, String key, String contentType, Integer expiresIn) {
+        if (String.isBlank(bucket) || String.isBlank(key)) {
+            throw new AuraHandledException('bucket and key are required');
+        }
+
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(ENDPOINT);
+        req.setMethod('POST');
+        req.setHeader('Content-Type', 'application/json');
+        req.setTimeout(120000);
+
+        Map<String, Object> payload = new Map<String, Object>{
+            'bucket' => bucket,
+            'key' => key,
+            'content_type' => contentType,
+            'expires_in' => (expiresIn == null ? 600 : expiresIn)
+        };
+        req.setBody(JSON.serialize(payload));
+
+        Http http = new Http();
+        HttpResponse res;
+        try {
+            res = http.send(req);
+        } catch (CalloutException ce) {
+            throw new AuraHandledException('Callout error: ' + ce.getMessage());
+        }
+
+        Integer status = res.getStatusCode();
+        if (status < 200 || status >= 300) {
+            throw new AuraHandledException('Presign service error. Status: ' + res.getStatus() + ' Body: ' + res.getBody());
+        }
+
+        Map<String, Object> bodyMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+
+        PresignResult out = new PresignResult();
+        out.presignedUrl = (String) bodyMap.get('presigned_url');
+        out.method = (String) bodyMap.get('method');
+
+        // safe numeric extraction: JSON numbers deserialize as Decimal in Apex
+        if (bodyMap.containsKey('expires_in') && bodyMap.get('expires_in') != null) {
+            Object raw = bodyMap.get('expires_in');
+            if (raw instanceof Decimal) {
+                out.expiresIn = ((Decimal) raw).intValue();
+            } else if (raw instanceof Integer) {
+                out.expiresIn = (Integer) raw;
+            } else {
+                // fallback - try to convert via string
+                try {
+                    out.expiresIn = Integer.valueOf(String.valueOf(raw));
+                } catch (Exception e) {
+                    out.expiresIn = (expiresIn == null ? 600 : expiresIn);
+                }
+            }
+        } else {
+            out.expiresIn = (expiresIn == null ? 600 : expiresIn);
+        }
+
+        out.s3ObjectKey = bodyMap.containsKey('s3_object_key') && bodyMap.get('s3_object_key') != null
+            ? (String) bodyMap.get('s3_object_key') : key;
+        out.bucket = bodyMap.containsKey('bucket') && bodyMap.get('bucket') != null
+            ? (String) bodyMap.get('bucket') : bucket;
+
+        if (String.isBlank(out.presignedUrl)) {
+            throw new AuraHandledException('Presign service returned empty URL');
+        }
+
+        return out;
+    }
+}
