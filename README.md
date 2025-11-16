@@ -73,11 +73,9 @@ This implementation supports:
 │
 ├── lambda/generate-presigned-url/
 │   ├── lambda_function.py
-│   └── requirements.txt
 │
 ├── s3/
 │   ├── cors.json
-│   └── bucket-policy.json
 │
 └── README.md
 ```
