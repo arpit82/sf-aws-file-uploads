@@ -9,7 +9,6 @@ This solution avoids Apex binary handling entirely and supports secure, scalable
 ## Table of Contents
 
 - Overview
-- Architecture Diagram
 - Repo Structure
 - Prerequisites
 - AWS Setup
