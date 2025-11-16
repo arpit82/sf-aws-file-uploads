@@ -1,0 +1,22 @@
+[
+    {
+        "AllowedHeaders": [
+            "Content-Type",
+            "x-amz-security-token",
+            "x-amz-meta-*",
+            "Authorization"
+        ],
+        "AllowedMethods": [
+            "PUT",
+            "POST",
+            "GET"
+        ],
+        "AllowedOrigins": [
+            "https://empathetic-hawk-hlrqcr-dev-ed.trailblaze.lightning.force.com"
+        ],
+        "ExposeHeaders": [
+            "ETag"
+        ],
+        "MaxAgeSeconds": 3000
+    }
+]
