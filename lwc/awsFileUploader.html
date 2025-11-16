@@ -1,0 +1,49 @@
+<template>
+    <lightning-card title="Upload file to Amazon S3" icon-name="custom:custom63">
+        <div class="slds-p-around_medium">
+            <lightning-input
+                type="file"
+                label="Choose file"
+                onchange={handleFileChange}
+                data-id="fileInput">
+            </lightning-input>
+
+            <template if:true={fileName}>
+                <p class="slds-m-top_small">
+                    <strong>File:</strong> {fileName} ({fileSizeReadable})
+                </p>
+            </template>
+
+            <div class="slds-m-top_small">
+                <lightning-button
+                    variant="brand"
+                    label="Upload"
+                    onclick={handleUpload}
+                    disabled={uploadDisabled}>
+                </lightning-button>
+
+                <lightning-button
+                    variant="neutral"
+                    label="Clear"
+                    onclick={handleClear}
+                    class="slds-m-left_small">
+                </lightning-button>
+            </div>
+
+            <template if:true={uploading}>
+                <div class="slds-m-top_medium">
+                    <p>Uploading... {progress}%</p>
+                    <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={progress}>
+                        <div class="progress-fill" style={progressStyle}></div>
+                    </div>
+                </div>
+            </template>
+
+            <template if:true={message}>
+                <div class="slds-m-top_medium">
+                    <p class={messageClass}>{message}</p>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>
